@@ -1,0 +1,34 @@
+﻿@model IEnumerable<HTTP5125Cumulative1.Models.Teacher>
+
+@{
+    ViewData["Title"] = "Teachers";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="GET" action="/TeacherPage/List">
+    <div>
+        <label for="start-hire-date">Start Hire Date:</label>
+        <input type="date" id="start-hire-date" name="StartHireDate" value=@Context.Request.Query["StartHireDate"] />
+        <label for="end-hire-date">End Hire Date:</label>
+        <input type="date" id="end-hire-date" name="EndHireDate" value=@Context.Request.Query["EndHireDate"] />
+        <input type="submit" value="Search" />
+    </div>
+</form>
+
+@{
+    if (Model.Count() == 0)
+    {
+        <p>No teacher found.</p>
+    }
+    else
+    {
+        foreach (HTTP5125Cumulative1.Models.Teacher Teacher in Model)
+        {
+            <div>
+                <a href="/TeacherPage/Show/@Teacher.TeacherId">@Teacher.EmployeeNumber</a>
+            </div>
+        }
+
+    }
+}

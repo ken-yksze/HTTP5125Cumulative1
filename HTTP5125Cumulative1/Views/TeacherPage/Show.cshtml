@@ -1,0 +1,34 @@
+﻿@model HTTP5125Cumulative1.Models.Teacher
+
+@{
+    if (Model == null)
+    {
+        ViewData["Title"] = "Teacher not found";
+
+        <h1>Teacher with ID @Context.Request.RouteValues["id"] not found.</h1>
+    }
+    else
+    {
+        ViewData["Title"] = Model.EmployeeNumber;
+
+        <h1>@ViewData["Title"]</h1>
+        <p><span style="font-style: italic">Teacher Name: @Model.TeacherFName @Model.TeacherLName</span></p>
+        <p><span style="font-style: italic">Hire Date: @Model.HireDate?.ToString("yyyy-MM-dd")</span></p>
+        <p><span style="font-style: italic">Salary: $@Model.Salary</span></p>
+        <h2>Courses:</h2>
+
+        if (Model.Courses == null || Model.Courses.Count() == 0)
+        {
+            <p>No course found.</p>
+        }
+        else
+        {
+            foreach (HTTP5125Cumulative1.Models.Course Course in Model.Courses)
+            {
+                <div>
+                    <a href="/CoursePage/Show/@Course.CourseId">@Course.CourseCode?.ToUpper()</a>
+                </div>
+            }
+        }
+    }
+}

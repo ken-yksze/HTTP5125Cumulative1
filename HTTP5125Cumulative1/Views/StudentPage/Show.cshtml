@@ -1,0 +1,9 @@
+﻿@model HTTP5125Cumulative1.Models.Student
+
+@{
+    ViewData["Title"] = @Model.StudentNumber;
+}
+
+<h1>@ViewData["Title"]</h1>
+<p><span style="font-style: italic">Student Name: @Model.StudentFName @Model.StudentLName</span></p>
+<p><span style="font-style: italic">Enrol Date: @Model.EnrolDate?.ToString("yyyy-MM-dd")</span></p>

@@ -1,0 +1,14 @@
+﻿@model IEnumerable<HTTP5125Cumulative1.Models.Student>
+
+@{
+    ViewData["Title"] = "Students";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@foreach (HTTP5125Cumulative1.Models.Student Student in Model)
+{
+    <div>
+        <a href="/StudentPage/Show/@Student.StudentId">@Student.StudentNumber</a>
+    </div>
+}
