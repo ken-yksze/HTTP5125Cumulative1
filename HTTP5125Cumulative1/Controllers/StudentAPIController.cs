@@ -19,7 +19,7 @@ namespace HTTP5125Cumulative1.Controllers
         }
 
         /// <summary>
-        /// Return a list of Students in the system.
+        /// Return a list of Students in the system
         /// </summary>
         /// <example>
         /// GET api/Student/ListStudents -> [ { "studentId": 1, "studentFName": "Sarah", "studentLName": "Valdez", "studentNumber": "N1678", "enrolDate": "2018-06-18T00:00:00" }, { "studentId": 2, "studentFName": "Jennifer", "studentLName": "Faulkner", "studentNumber": "N1679", "enrolDate": "2018-08-02T00:00:00" }, ... ]

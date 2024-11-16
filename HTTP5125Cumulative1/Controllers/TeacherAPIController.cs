@@ -19,9 +19,9 @@ namespace HTTP5125Cumulative1.Controllers
         }
 
         /// <summary>
-        /// Return a list of Teachers in the system.
-        /// If StartHireDate is included, search for teachers hired on or after StartHireDate.
-        /// If EndHireDate is included, search for teachers hired on or before EndHireDate.
+        /// Return a list of Teachers in the system
+        /// If StartHireDate is included, search for teachers hired on or after StartHireDate
+        /// If EndHireDate is included, search for teachers hired on or before EndHireDate
         /// </summary>
         /// <param name="StartHireDate">
         /// Teacher's start hire date filter, inclusive

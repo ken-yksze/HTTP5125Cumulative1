@@ -19,7 +19,7 @@ namespace HTTP5125Cumulative1.Controllers
         }
 
         /// <summary>
-        /// Return a list of Courses in the system.
+        /// Return a list of Courses in the system
         /// </summary>
         /// <example>
         /// GET api/Course/ListCourses -> [ { "courseId": 1, "courseCode": "http5101", "teacherId": 1, "startDate": "2018-09-04T00:00:00", "finishDate": "2018-12-14T00:00:00", "courseName": "Web Application Development" }, { "courseId": 2, "courseCode": "http5102", "teacherId": 2, "startDate": "2018-09-04T00:00:00", "finishDate": "2018-12-14T00:00:00", "courseName": "Project Management" }, ... ]
