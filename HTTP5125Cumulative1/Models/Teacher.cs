@@ -9,5 +9,6 @@
         public DateTime? HireDate { get; set; }
         public decimal? Salary { get; set; }
         public List<Course>? Courses { get; set; }
+        public string? TeacherWorkPhone { get; set; }
     }
 }

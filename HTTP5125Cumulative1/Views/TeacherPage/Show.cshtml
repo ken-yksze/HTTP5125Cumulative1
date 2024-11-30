@@ -12,9 +12,19 @@
         ViewData["Title"] = Model.EmployeeNumber;
 
         <h1>@ViewData["Title"]</h1>
+        <nav>
+            <a class="navlink" href="/TeacherPage/List">Back to Teachers</a>
+            <a class="alert-warning" href="/TeacherPage/DeleteConfirm/@Model.TeacherId">Delete</a>
+        </nav>
         <p><span style="font-style: italic">Teacher Name: @Model.TeacherFName @Model.TeacherLName</span></p>
         <p><span style="font-style: italic">Hire Date: @Model.HireDate?.ToString("yyyy-MM-dd")</span></p>
         <p><span style="font-style: italic">Salary: $@Model.Salary</span></p>
+
+        if (!string.IsNullOrWhiteSpace(Model.TeacherWorkPhone))
+        {
+            <p><span style="font-style: italic">Work Phone: @Model.TeacherWorkPhone</span></p>
+        }
+
         <h2>Courses:</h2>
 
         if (Model.Courses == null || Model.Courses.Count() == 0)

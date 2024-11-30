@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "New Teacher";
+}
+
+<div id="containershow">
+    <h1>New Teacher</h1>
+    <nav>
+        <a class="navlink" href="/TeacherPage/List">Back to Teachers</a>
+    </nav>
+    <form id="NewTeacherForm" name="NewTeacherForm" action="" method="POST">
+        <div class="inputrow">
+            <label for="TeacherFName">First Name:</label>
+            <input id="TeacherFName" name="TeacherFName" type="text" />
+        </div>
+        <div class="inputrow">
+            <label for="TeacherLName">Last Name:</label>
+            <input id="TeacherLName" name="TeacherLName" type="text" />
+        </div>
+        <div class="inputrow">
+            <label for="EmployeeNumber">Employee Number:</label>
+            <input id="EmployeeNumber" name="EmployeeNumber" type="text" />
+        </div>
+        <div class="inputrow">
+            <label for="HireDate">Hire Date:</label>
+            <input id="HireDate" name="HireDate" type="date" />
+        </div>
+        <div class="inputrow">
+            <label for="Salary">Salary:</label>
+            <input id="Salary" name="Salary" type="number" />
+        </div>
+        <div class="inputrow">
+            <label for="TeacherWorkPhone">Work Phone:</label>
+            <input id="TeacherWorkPhone" name="TeacherWorkPhone" type="text" />
+        </div>
+        <input type="submit" value="Add Teacher" />
+        <p id="ErrorMessage" style="color: red"></p>
+    </form>
+</div>
+
+<script>
+    const pageReady = () => {
+        const newTeacherForm = document.forms.namedItem("NewTeacherForm");
+
+        const addTeacher = (event) => {
+            // Prevent default submit behaviour
+            event.preventDefault();
+
+            const firstNameInput = newTeacherForm.elements.namedItem("TeacherFName");
+            const lastNameInput = newTeacherForm.elements.namedItem("TeacherLName");
+            const employeeNumberInput = newTeacherForm.elements.namedItem("EmployeeNumber");
+            const hireDateInput = newTeacherForm.elements.namedItem("HireDate");
+            const salaryInput = newTeacherForm.elements.namedItem("Salary");
+            const workPhoneInput = newTeacherForm.elements.namedItem("TeacherWorkPhone");
+            const errorMessage = document.getElementById("ErrorMessage");
+            errorMessage.innerHTML = "";
+
+            // Remove input error background when submitting
+            for (const input of document.getElementsByTagName("input")) {
+                input.style.backgroundColor = "transparent";
+            }
+
+            const teacherData = {
+                "TeacherFName": firstNameInput.value,
+                "TeacherLName": lastNameInput.value,
+                "EmployeeNumber": employeeNumberInput.value,
+                "HireDate": hireDateInput.value === "" ? null : hireDateInput.value,
+                "Salary": isNaN(parseInt(salaryInput.value)) ? null : parseInt(salaryInput.value),
+                "TeacherWorkPhone": workPhoneInput.value
+            }
+
+            const url = "/api/Teacher/AddTeacher";
+            const rq = new XMLHttpRequest();
+            rq.open("POST", url, true);
+            rq.setRequestHeader("Content-Type", "application/json");
+
+            rq.onreadystatechange = () => {
+                // Early return if not ready
+                if (rq.readyState != 4) return;
+
+                if (rq.status == 200) {
+                    const teacherId = rq.responseText;
+                    window.location = `/TeacherPage/Show/${teacherId}`;
+                }
+                else {
+                    const errorBody = JSON.parse(rq.responseText);
+                    const inputField = document.getElementById(errorBody?.field ?? "");
+
+                    if (inputField !== null) {
+                        inputField.style.backgroundColor = "red";
+                    }
+
+                    errorMessage.innerHTML = errorBody?.message ?? "";
+                }
+            }
+
+            rq.send(JSON.stringify(teacherData));
+        }
+
+        newTeacherForm.addEventListener("submit", addTeacher);
+    }
+
+    window.onload = pageReady;
+</script>

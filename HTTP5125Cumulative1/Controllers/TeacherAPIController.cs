@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using HTTP5125Cumulative1.Models;
 using System;
 using MySql.Data.MySqlClient;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace HTTP5125Cumulative1.Controllers
 {
@@ -149,6 +151,7 @@ namespace HTTP5125Cumulative1.Controllers
                         string? EmployeeNumber = TeacherResultSet["employeenumber"]?.ToString();
                         DateTime? HireDate = TeacherResultSet["hiredate"] == DBNull.Value ? null : Convert.ToDateTime(TeacherResultSet["hiredate"]);
                         decimal? Salary = TeacherResultSet["salary"] == DBNull.Value ? null : Convert.ToDecimal(TeacherResultSet["salary"]);
+                        string? TeacherWorkPhone = TeacherResultSet["teacherworkphone"]?.ToString();
 
                         SelectedTeacher = new Teacher()
                         {
@@ -158,7 +161,8 @@ namespace HTTP5125Cumulative1.Controllers
                             EmployeeNumber = EmployeeNumber,
                             HireDate = HireDate,
                             Salary = Salary,
-                            Courses = new List<Course>()
+                            Courses = new List<Course>(),
+                            TeacherWorkPhone = TeacherWorkPhone
                         };
                     }
                 }
@@ -205,6 +209,149 @@ namespace HTTP5125Cumulative1.Controllers
 
             // Return the selected teacher wrapped by OkObjectResult
             return Ok(SelectedTeacher);
+        }
+
+        /// <summary>
+        /// Add a new teacher to the database after data validation
+        /// </summary>
+        /// <param name="TeacherData">
+        /// TeacherData of type Teacher Object
+        /// </param>
+        /// <example>
+        /// curl -H "Content-Type: application/json" -d "{ \"TeacherFName\": \"Foo\", \"TeacherLName\": \"Bar\", \"EmployeeNumber\": \"T123\", \"HireDate\": \"2024-11-22T00:00:00.000Z\", \"Salary\": 100000, \"TeacherWorkPhone\": \"1234567890\" }" "https://localhost:xxxx/api/Teacher/AddTeacher"
+        /// </example>
+        /// <returns>
+        /// The new teacher ID of type int wrapped by OkObjectResult. UnprocessableEntityObjectResult if there is invalid data. ConflictObjectResult if there exists duplicated record.
+        /// </returns>
+        [HttpPost(template: "AddTeacher")]
+        [Consumes("application/json")]
+        public IActionResult AddTeacher([FromBody] Teacher TeacherData)
+        {
+            // Error handling when the teacher first name is empty
+            if (string.IsNullOrWhiteSpace(TeacherData.TeacherFName))
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "TeacherFName",
+                    Message = "Please provide valid teacher first name."
+                });
+            }
+
+            // Error handling when the teacher last name is empty
+            if (string.IsNullOrWhiteSpace(TeacherData.TeacherLName))
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "TeacherLName",
+                    Message = "Please provide valid teacher last name."
+                });
+            }
+
+            // Error handling when the teacher hire date is null or in the future
+            if (TeacherData.HireDate == null || TeacherData.HireDate > DateTime.Now)
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "HireDate",
+                    Message = "Please provide valid teacher hire date."
+                });
+            }
+
+            // Error handling when the teacher employee number is null or not started with 'T' and followed by digits
+            if (TeacherData.EmployeeNumber == null || !Regex.IsMatch(TeacherData.EmployeeNumber, @"^T\d+$"))
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "EmployeeNumber",
+                    Message = "Please provide valid teacher employee number."
+                });
+            }
+
+            // 'using' will close the connection after the code executes
+            using (MySqlConnection Connection = _context.AccessDatabase())
+            {
+                Connection.Open();
+
+                // Establish a new command (query) for our database to get the duplicated results as there is no unique constraint in db
+                MySqlCommand DuplicateCheckCommand = Connection.CreateCommand();
+                DuplicateCheckCommand.CommandText = "SELECT * FROM teachers WHERE employeenumber = @employeenumber";
+                DuplicateCheckCommand.Parameters.AddWithValue("@employeenumber", TeacherData.EmployeeNumber);
+
+                // Gather Duplicated Result Set of Query into a variable
+                using (MySqlDataReader DuplicatedResultSet = DuplicateCheckCommand.ExecuteReader())
+                {
+                    // If there is a record where employeenumber = @employeenumber
+                    if (DuplicatedResultSet.Read())
+                    {
+                        return Conflict(new HTTPErrorBody()
+                        {
+                            Field = "EmployeeNumber",
+                            Message = $"Teacher with employee number {TeacherData.EmployeeNumber} already exists."
+                        });
+                    }
+                }
+
+                // Establish a new command (query) for our database to insert data
+                MySqlCommand InsertCommand = Connection.CreateCommand();
+                InsertCommand.CommandText = "INSERT INTO teachers (teacherfname, teacherlname, employeenumber, hiredate, salary, teacherworkphone) values (@teacherfname, @teacherlname, @employeenumber, @hiredate, @salary, @teacherworkphone)";
+                InsertCommand.Parameters.AddWithValue("@teacherfname", TeacherData.TeacherFName);
+                InsertCommand.Parameters.AddWithValue("@teacherlname", TeacherData.TeacherLName);
+                InsertCommand.Parameters.AddWithValue("@employeenumber", TeacherData.EmployeeNumber);
+                InsertCommand.Parameters.AddWithValue("@hiredate", TeacherData.HireDate);
+                InsertCommand.Parameters.AddWithValue("@salary", TeacherData.Salary);
+                InsertCommand.Parameters.AddWithValue("@teacherworkphone", TeacherData.TeacherWorkPhone);
+
+                InsertCommand.ExecuteNonQuery();
+
+                return Ok(Convert.ToInt32(InsertCommand.LastInsertedId));
+            }
+        }
+
+        /// <summary>
+        /// Deletes a Teacher from the database after existence check
+        /// </summary>
+        /// <param name="id">
+        /// Teacher ID
+        /// </param>
+        /// <example>
+        /// DELETE: api/Teacher/DeleteTeacher/1 -> 1
+        /// </example>
+        /// <returns>
+        /// Number of rows affected by the delete operation of type int wrapped by OkObjectResult. NotFoundObjectResult if teacher with such ID does not exist.
+        /// </returns>
+        [HttpDelete(template: "DeleteTeacher/{id}")]
+        public IActionResult DeleteTeacher(int id)
+        {
+            // 'using' will close the connection after the code executes
+            using (MySqlConnection Connection = _context.AccessDatabase())
+            {
+                Connection.Open();
+
+                // Establish a new command (query) for our database to get the existing record in db
+                MySqlCommand ExistCheckCommand = Connection.CreateCommand();
+                ExistCheckCommand.CommandText = "SELECT * FROM teachers WHERE teacherid = @id";
+                ExistCheckCommand.Parameters.AddWithValue("@id", id);
+
+                // Gather Exist Result Set of Query into a variable
+                using (MySqlDataReader ExistResultSet = ExistCheckCommand.ExecuteReader())
+                {
+                    // If there is no record where teacherid = @id
+                    if (!ExistResultSet.Read())
+                    {
+                        return NotFound(new HTTPErrorBody()
+                        {
+                            Field = "id",
+                            Message = $"Teacher with ID {id} not found."
+                        });
+                    }
+                }
+
+                // Establish a new command (query) for our database to delete the existing record in db
+                MySqlCommand DeleteCommand = Connection.CreateCommand();
+                DeleteCommand.CommandText = "DELETE FROM teachers WHERE teacherid = @id";
+                DeleteCommand.Parameters.AddWithValue("@id", id);
+                return Ok(DeleteCommand.ExecuteNonQuery());
+            }
         }
     }
 }

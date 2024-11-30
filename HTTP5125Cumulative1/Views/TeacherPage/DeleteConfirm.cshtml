@@ -1,0 +1,64 @@
+﻿@model HTTP5125Cumulative1.Models.Teacher
+
+@{
+    if (Model == null)
+    {
+        ViewData["Title"] = "Teacher not found";
+
+        <h1>Teacher with ID @Context.Request.RouteValues["id"] not found.</h1>
+    }
+    else
+    {
+        ViewData["Title"] = "Delete Confirm";
+
+        <div id="containershow">
+            <nav>
+                <a class="navlink" href="/TeacherPage/Show/@Model.TeacherId">Cancel</a>
+            </nav>
+            <h2>Are you sure you want to delete @Model.TeacherFName @Model.TeacherLName?</h2>
+            <p>This action cannot be undone.</p>
+            <form id="DeleteTeacherForm" name="DeleteTeacherForm" action="" method="POST">
+                <input class="btn-warning" type="submit" value="Confirm Delete" />
+            </form>
+            <p id="ErrorMessage" style="color: red"></p>
+        </div>
+
+        <script>
+            const pageReady = () => {
+                const deleteTeacherForm = document.forms.namedItem("DeleteTeacherForm");
+
+                const deleteTeacher = (event) => {
+                    // Prevent default submit behaviour
+                    event.preventDefault();
+
+                    const errorMessage = document.getElementById("ErrorMessage");
+                    errorMessage.innerHTML = "";
+
+                    const url = "/api/Teacher/DeleteTeacher/@Model.TeacherId";
+                    const rq = new XMLHttpRequest();
+                    rq.open("DELETE", url, true);
+
+                    rq.onreadystatechange = () => {
+                        // Early return if not ready
+                        if (rq.readyState != 4) return;
+
+                        if (rq.status == 200) {
+                            window.location = `/TeacherPage/List`;
+                        }
+                        else {
+                            const errorBody = JSON.parse(rq.responseText);
+                            errorMessage.innerHTML = errorBody?.message ?? "";
+                        }
+                    }
+
+                    rq.send(null);
+                }
+
+                deleteTeacherForm.addEventListener("submit", deleteTeacher);
+            }
+
+            window.onload = pageReady;
+        </script>
+
+    }
+}

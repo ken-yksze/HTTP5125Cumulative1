@@ -34,5 +34,27 @@ namespace HTTP5125Cumulative1.Controllers
                 return View(null);
             }
         }
+
+        // GET: TeacherPage/New
+        public IActionResult New()
+        {
+            return View();
+        }
+
+        // GET: TeacherPage/DeleteConfirm/{id}
+        public IActionResult DeleteConfirm(int id)
+        {
+            IActionResult response = _api.ShowTeacher(id);
+
+            if (response is OkObjectResult okResult)
+            {
+                Teacher? SelectedTeacher = okResult.Value == null ? null : (Teacher)okResult.Value;
+                return View(SelectedTeacher);
+            }
+            else
+            {
+                return View(null);
+            }
+        }
     }
 }

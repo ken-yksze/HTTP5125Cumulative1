@@ -5,6 +5,9 @@
 }
 
 <h1>@ViewData["Title"]</h1>
+<nav>
+    <a class="navlink" href="/CoursePage/List">Back to Courses</a>
+</nav>
 <p><a href="/TeacherPage/Show/@Model.TeacherId"><span style="font-style: italic">Teacher ID: @Model.TeacherId</span></a></p>
 <p><span style="font-style: italic">Start Date: @Model.StartDate?.ToString("yyyy-MM-dd")</span></p>
 <p><span style="font-style: italic">Finish Date: @Model.FinishDate?.ToString("yyyy-MM-dd")</span></p>
