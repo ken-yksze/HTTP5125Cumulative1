@@ -50,6 +50,21 @@
     - Usage
         - DELETE: api/Teacher/DeleteTeacher/1 -> 1
 
+- PUT /api/Teacher/UpdateTeacher/{id}
+    - Summary
+        - Update a Teacher in the database after data validation & existence check
+    - Body (JSON)
+        - string? TeacherFName
+        - string? TeacherLName
+        - DateTime? HireDate
+        - decimal? Salary
+    - Return
+        - The updated Teacher object wrapped by OkObjectResult.
+        - UnprocessableEntityObjectResult if there is invalid data.
+        - NotFoundObjectResult if Teacher not found.
+    - Usage
+        - curl -X PUT -H "Content-Type: application/json" -d "{ \"TeacherFName\": \"Foo\", \"TeacherLName\": \"Bar\", \"HireDate\": \"2024-11-22T00:00:00.000Z\", \"Salary\": 100000 }" "https://localhost:xxxx/api/Teacher/UpdateTeacher/1"
+
 - GET /api/Student/ListStudents
     - Summary
         - Return a list of Students in the system
@@ -88,6 +103,8 @@
 - TeacherPage/New
 
 - TeacherPage/DeleteConfirm/{id}
+
+- TeacherPage/Update/{id}
 
 - StudentPage/List
 
