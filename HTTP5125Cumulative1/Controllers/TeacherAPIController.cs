@@ -353,5 +353,103 @@ namespace HTTP5125Cumulative1.Controllers
                 return Ok(DeleteCommand.ExecuteNonQuery());
             }
         }
+
+        /// <summary>
+        /// Update a Teacher in the database after data validation & existence check
+        /// </summary>
+        /// <param name="id">
+        /// Teacher ID
+        /// </param>
+        /// <param name="TeacherData">
+        /// New teacher data
+        /// </param>
+        /// <example>
+        /// curl -X PUT -H "Content-Type: application/json" -d "{ \"TeacherFName\": \"Foo\", \"TeacherLName\": \"Bar\", \"HireDate\": \"2024-11-22T00:00:00.000Z\", \"Salary\": 100000 }" "https://localhost:xxxx/api/Teacher/UpdateTeacher/1"
+        /// </example>
+        /// <returns>
+        /// The updated Teacher object wrapped by OkObjectResult. UnprocessableEntityObjectResult if there is invalid data. NotFoundObjectResult if Teacher not found.
+        /// </returns>
+        [HttpPut(template: "UpdateTeacher/{id}")]
+        [Consumes("application/json")]
+        public IActionResult UpdateTeacher(int id, [FromBody] Teacher TeacherData)
+        {
+            // Error handling when the teacher first name is empty
+            if (string.IsNullOrWhiteSpace(TeacherData.TeacherFName))
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "TeacherFName",
+                    Message = "Please provide valid teacher first name."
+                });
+            }
+
+            // Error handling when the teacher last name is empty
+            if (string.IsNullOrWhiteSpace(TeacherData.TeacherLName))
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "TeacherLName",
+                    Message = "Please provide valid teacher last name."
+                });
+            }
+
+            // Error handling when the teacher hire date is null or in the future
+            if (TeacherData.HireDate == null || TeacherData.HireDate > DateTime.Now)
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "HireDate",
+                    Message = "Please provide valid teacher hire date."
+                });
+            }
+
+            // Error handling when the teacher salary is null or negative
+            if (TeacherData.Salary == null || TeacherData.Salary < 0)
+            {
+                return UnprocessableEntity(new HTTPErrorBody()
+                {
+                    Field = "Salary",
+                    Message = "Please provide valid and non-negative salary."
+                });
+            }
+
+            // 'using' will close the connection after the code executes
+            using (MySqlConnection Connection = _context.AccessDatabase())
+            {
+                Connection.Open();
+
+                // Establish a new command (query) for our database to get the existing record in db
+                MySqlCommand ExistCheckCommand = Connection.CreateCommand();
+                ExistCheckCommand.CommandText = "SELECT * FROM teachers WHERE teacherid = @id";
+                ExistCheckCommand.Parameters.AddWithValue("@id", id);
+
+                // Gather Exist Result Set of Query into a variable
+                using (MySqlDataReader ExistResultSet = ExistCheckCommand.ExecuteReader())
+                {
+                    // If there is no record where teacherid = @id
+                    if (!ExistResultSet.Read())
+                    {
+                        return NotFound(new HTTPErrorBody()
+                        {
+                            Field = "id",
+                            Message = $"Teacher with ID {id} not found."
+                        });
+                    }
+                }
+
+                // Establish a new command (query) for our database to update data
+                MySqlCommand UpdateCommand = Connection.CreateCommand();
+                UpdateCommand.CommandText = "UPDATE teachers SET teacherfname=@teacherfname, teacherlname=@teacherlname, hiredate=@hiredate, salary=@salary WHERE teacherid=@id";
+                UpdateCommand.Parameters.AddWithValue("@teacherfname", TeacherData.TeacherFName);
+                UpdateCommand.Parameters.AddWithValue("@teacherlname", TeacherData.TeacherLName);
+                UpdateCommand.Parameters.AddWithValue("@hiredate", TeacherData.HireDate);
+                UpdateCommand.Parameters.AddWithValue("@salary", TeacherData.Salary);
+                UpdateCommand.Parameters.AddWithValue("@id", id);
+
+                UpdateCommand.ExecuteNonQuery();
+            }
+
+            return Ok(ShowTeacher(id));
+        }
     }
 }

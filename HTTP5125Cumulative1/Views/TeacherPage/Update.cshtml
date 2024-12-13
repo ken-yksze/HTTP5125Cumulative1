@@ -1,0 +1,118 @@
+﻿@model HTTP5125Cumulative1.Models.Teacher
+
+@{
+    if (Model == null)
+    {
+        ViewData["Title"] = "Teacher not found";
+
+        <h1>Teacher with ID @Context.Request.RouteValues["id"] not found.</h1>
+    }
+    else
+    {
+        ViewData["Title"] = Model.EmployeeNumber;
+
+        <h1>@ViewData["Title"]</h1>
+        <nav>
+            <a class="alert-warning" href="/TeacherPage/Show/@Model.TeacherId">Cancel</a>
+            <a id="UpdateButton" class="alert-warning" href="#">Update</a>
+        </nav>
+        <p>
+            <span style="font-style: italic">
+                Teacher Name:
+                @Html.EditorFor(Model => Model.TeacherFName, new { htmlAttributes = new { @placeholder = "First Name", id = "TeacherFName" } })
+                @Html.EditorFor(Model => Model.TeacherLName, new { htmlAttributes = new { @placeholder = "Last Name", id = "TeacherLName" } })
+            </span>
+        </p>
+        <p><span style="font-style: italic">Hire Date: @Html.EditorFor(Model => Model.HireDate, new { htmlAttributes = new { id = "HireDate" } })</span></p>
+        <p><span style="font-style: italic">Salary: $@Html.EditorFor(Model => Model.Salary, new { htmlAttributes = new { id = "Salary", type = "number" } })</span></p>
+        <p id="ErrorMessage" style="color: red"></p>
+
+        <script>
+            const pageReady = () => {
+                const updateButton = document.getElementById("UpdateButton");
+
+                const updateTeacher = (event) => {
+                    // Prevent default a tag behaviour
+                    event.preventDefault();
+
+                    const firstNameInput = document.getElementById("TeacherFName");
+                    const lastNameInput = document.getElementById("TeacherLName");
+                    const hireDateInput = document.getElementById("HireDate");
+                    const salaryInput = document.getElementById("Salary");
+                    const errorMessage = document.getElementById("ErrorMessage");
+                    errorMessage.innerHTML = "";
+
+                    // Remove input error background when submitting
+                    for (const input of document.getElementsByTagName("input")) {
+                        input.style.backgroundColor = "transparent";
+                    }
+
+                    const teacherData = {
+                        "TeacherFName": firstNameInput.value,
+                        "TeacherLName": lastNameInput.value,
+                        "HireDate": hireDateInput.value === "" ? null : hireDateInput.value,
+                        "Salary": isNaN(salaryInput.valueAsNumber) ? null : salaryInput.valueAsNumber
+                    };
+
+                    // Error handling when the teacher first name is empty
+                    if (teacherData.TeacherFName === "") {
+                        firstNameInput.style.backgroundColor = "red";
+                        errorMessage.innerHTML = "Please provide valid teacher first name.";
+                        return;
+                    }
+
+                    // Error handling when the teacher last name is empty
+                    if (teacherData.TeacherLName === "") {
+                        lastNameInput.style.backgroundColor = "red";
+                        errorMessage.innerHTML = "Please provide valid teacher last name.";
+                        return;
+                    }
+
+                    // Error handling when the teacher hire date is null or in the future
+                    if (teacherData.HireDate === null || new Date(teacherData.HireDate) > Date.now()) {
+                        hireDateInput.style.backgroundColor = "red";
+                        errorMessage.innerHTML = "Please provide valid teacher hire date.";
+                        return;
+                    }
+
+                    // Error handling when the teacher salary is null or negative
+                    if (teacherData.Salary === null || teacherData.Salary < 0) {
+                        salaryInput.style.backgroundColor = "red";
+                        errorMessage.innerHTML = "Please provide valid and non-negative salary.";
+                        return;
+                    }
+
+                    const url = "/api/Teacher/UpdateTeacher/@Model.TeacherId";
+                    const rq = new XMLHttpRequest();
+                    rq.open("PUT", url, true);
+                    rq.setRequestHeader("Content-Type", "application/json");
+
+                    rq.onreadystatechange = () => {
+                        // Early return if not ready
+                        if (rq.readyState != 4) return;
+
+                        if (rq.status == 200) {
+                            window.location = "/TeacherPage/Show/@Model.TeacherId";
+                        }
+                        else {
+                            const errorBody = JSON.parse(rq.responseText);
+                            const inputField = document.getElementById(errorBody?.field ?? "");
+
+                            if (inputField !== null) {
+                                inputField.style.backgroundColor = "red";
+                            }
+
+                            errorMessage.innerHTML = errorBody?.message ?? "";
+                        }
+                    }
+
+                    rq.send(JSON.stringify(teacherData));
+                };
+
+                updateButton.addEventListener("click", updateTeacher);
+            };
+
+            window.onload = pageReady;
+        </script>
+    }
+}

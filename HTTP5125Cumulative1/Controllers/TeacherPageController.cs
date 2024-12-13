@@ -56,5 +56,21 @@ namespace HTTP5125Cumulative1.Controllers
                 return View(null);
             }
         }
+
+        // GET: TeacherPage/Update/{id}
+        public IActionResult Update(int id)
+        {
+            IActionResult response = _api.ShowTeacher(id);
+
+            if (response is OkObjectResult okResult)
+            {
+                Teacher? SelectedTeacher = okResult.Value == null ? null : (Teacher)okResult.Value;
+                return View(SelectedTeacher);
+            }
+            else
+            {
+                return View(null);
+            }
+        }
     }
 }
